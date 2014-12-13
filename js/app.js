@@ -5,6 +5,7 @@ $(document).ready(function(){
 	var max;
 	var number;
 	var guessCount;
+	var gameOver;
 
 	newGame();
 
@@ -24,8 +25,7 @@ $(document).ready(function(){
   		newGame();
   	});
 
-  	/*--- Display guess feedback ---*/
-  	//$("#guess-form").submit({min: min, max: max}, getFeedBack);
+  	/*--- Display feedback about guess ---*/
   	$("#guess-form").submit(getFeedBack);
 
 });
@@ -36,16 +36,21 @@ function getRandomInt(min, max) {
 }
 
 function newGame() {
-	$("#feedback").html("Make your Guess!");
-	$("#guessList").html("");
-	guessCount = 0;
-	$("#count").html(guessCount);
-
+	gameOver = false;
 	min = 1;
 	max = 100;
+	guessCount = 0;
 	number = getRandomInt(min, max);
 
+	$("#feedback").html("Make your Guess!");
+	$("#count").html(guessCount);
+	$("#guessList").empty();
+
 	console.log("New Game Number: ", number);
+}
+
+function stringToNumber(str) {
+	return +$.trim(str);
 }
 
 function isGuessValid(guess) {
@@ -53,7 +58,7 @@ function isGuessValid(guess) {
 		return false;
 	}
 	
-	guess = +$.trim(guess);
+	guess = stringToNumber(guess);
 	
 	if(!guess || guess < min || guess > max ) {		
 		return false;		
@@ -62,30 +67,51 @@ function isGuessValid(guess) {
 	return true;
 }
 
-function updateGuessCount(count) {
-	guessCount = count;
-	$("#count").html(guessCount);
-}
-
 function getFeedBack(event) {
 	event.preventDefault();
-	var guess = $("#userGuess").val();	
+	
+	if(gameOver) {
+		$("#feedback").html("You've already won the game! Press +New Game to play again.");
+		return;
+	}
 
-	if(isGuessValid(guess)) {
-		console.log("Valid Guess: ", guess);
-		
-		guessCount++;
-		updateGuessCount(guessCount);
-		//console.log(guessCount++);
+	var guess = $("#userGuess").val();	
+	if(!isGuessValid(guess)) {		
+		$("#feedback").fadeOut("fast");
+		$("#feedback").html("You entered &#39;" + guess + "&#39;. <br>" +
+			                " Please enter a non-decimal number from " +
+			                min + " to " + max + ".");
+		$("#feedback").fadeIn("fast");
+		return;
+	}
+
+	$("#count").html(++guessCount);
+	$("#guessList").append("<li>" + guess + "</li>");
+	guess = stringToNumber(guess);
+	var diff = Math.abs(number - guess);
+	
+	if(guess === number) {
+		$("#feedback").html("Correct! You've won the game!");
+		gameOver = true;
+	}
+	else if(diff <= 5) {
+		$("#feedback").html("Your guess is getting too hot!");
+	}
+	else if(diff <= 10) {
+		$("#feedback").html("You guess is getting hot!");
+	}
+	else if(diff <= 20) {
+		$("#feedback").html("You guess is getting warm!");
+	}
+	else if(diff <= 30) {
+		$("#feedback").html("You guess is getting cold!");
+	}
+	else if(diff <= 40) {
+		$("#feedback").html("You guess is getting very cold!");
 	}
 	else {
-		$("#feedback").fadeOut("fast");
-		$("#feedback").html("You entered &#39;" + guess + "&#39;. <br> Please enter a number from " + min + " to " + max + ".");
-		$("#feedback").fadeIn("fast");
+		$("#feedback").html("You guess is getting freezing!");
 	}
-
-	// Set ranges for values (warm or cold) 
-	// Don't forget edge cases
 
 	$("#userGuess").val("");
 }
