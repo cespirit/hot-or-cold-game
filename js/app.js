@@ -3,6 +3,8 @@ $(document).ready(function(){
 	var min = 1;
 	var max = 100;
 	var answer;
+	var firstGuess;
+	var previousDiff;
 	var guessCount;
 	var gameFinished;
 
@@ -32,6 +34,8 @@ $(document).ready(function(){
 
 	function setFeedBack(feedBack) {
 		$("#feedback").html(feedBack);
+		$("#feedback").hide();
+		$("#feedback").fadeIn(500);
 	}
 
 	function stringToNumber(str) {
@@ -51,11 +55,18 @@ $(document).ready(function(){
 		return true;
 	}
 
+	function userWins() {
+		setFeedBack("Correct! You've won the game!");
+		gameFinished = true;
+	}
+
 	function newGame() {
 		guessCount = 0;
 		gameFinished = false;
 		answer = getRandomInt(min, max);
+		firstGuess = true;
 		setFeedBack("Make your Guess!");
+		$("#userGuess").focus();
 		$("#count").html(guessCount); 
 		$("#guessList").empty();
 
@@ -68,7 +79,8 @@ $(document).ready(function(){
 		$("#userGuess").val("");
 
 		if(gameFinished) {
-			setFeedBack("You've already won the game! Press +New Game to play again.");			
+			setFeedBack("You've already won the game! Press +New Game to play again.");	
+			$(".new").focus();		
 			return;
 		}
 
@@ -81,22 +93,39 @@ $(document).ready(function(){
 
 		userGuess = stringToNumber(userGuess);
 		var diff = Math.abs(answer - userGuess);
+		
+		if(firstGuess) {			
+			if(diff === 0) {
+				userWins();
+			} else if(diff <= 5) {
+				setFeedBack("Your guess is in very hot territory!");
+			} else if(diff <= 10) {
+				setFeedBack("Your guess is in hot terrain!");
+			} else if(diff <= 20) {
+				setFeedBack("Your guess is in a warm area!");
+			} else if(diff <= 30) {
+				setFeedBack("Your guess is in cold terrain!");
+			} else if(diff <= 40) {
+				setFeedBack("Your guess is in very cold territory!");
+			} else {
+				setFeedBack("Your guess is freezing cold!");
+			}
 
-		if(diff === 0) {
-			setFeedBack("Correct! You've won the game!");
-			gameFinished = true;
-		} else if(diff <= 5) {
-			setFeedBack("Your guess is getting too hot!");
-		} else if(diff <= 10) {
-			setFeedBack("You guess is getting hot!");
-		} else if(diff <= 20) {
-			setFeedBack("You guess is getting warm!");
-		} else if(diff <= 30) {
-			setFeedBack("You guess is getting cold!");
-		} else if(diff <= 40) {
-			setFeedBack("You guess is getting very cold!");
+			previousDiff = diff;
+			firstGuess = false;
+
 		} else {
-			setFeedBack("You guess is getting freezing!");
+			if(diff === 0) {				
+				userWins();
+			} else if(previousDiff === diff) {
+				setFeedBack("Neither colder nor warmer.");
+			}
+			else if(previousDiff < diff) {
+				setFeedBack("Getting Colder!");
+			} else {
+				setFeedBack("Getting Warmer!");
+			}
+			previousDiff = diff;
 		}
 
 		$("#count").html(++guessCount);
